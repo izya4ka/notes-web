@@ -10,7 +10,7 @@ import (
 )
 
 func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error) {
-	
+
 	token, jerr := util.CalcToken(username)
 	if jerr != nil {
 		return "", jerr
@@ -18,6 +18,6 @@ func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error
 
 	ctx := context.Background()
 	rdb.Del(ctx, username)
-	go rdb.Set(ctx, username, token, time.Hour * 24 * 7)
+	go rdb.Set(ctx, username, token, time.Hour*24*7)
 	return token, nil
 }

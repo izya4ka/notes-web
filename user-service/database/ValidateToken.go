@@ -9,7 +9,7 @@ import (
 )
 
 func ValidateToken(rdb *redis.Client, username string, token string) error {
-	
+
 	ctx := context.Background()
 	db_token, err := rdb.Get(ctx, username).Result()
 	if err != nil {
@@ -22,5 +22,5 @@ func ValidateToken(rdb *redis.Client, username string, token string) error {
 		return myerrors.ErrInvalidToken(0)
 	}
 	return nil
-	
+
 }

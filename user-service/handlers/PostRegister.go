@@ -13,7 +13,7 @@ import (
 )
 
 func PostRegister(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
-	
+
 	req := new(models.LogPassReq)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")

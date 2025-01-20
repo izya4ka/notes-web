@@ -7,7 +7,7 @@ import (
 )
 
 func UpdateCreds(db *gorm.DB, req *models.UserChangeCreds) error {
-	
+
 	user := new(models.UserPostgres)
 	user.Username = req.NewUsername
 	new_password, err := util.Hash(req.NewPassword)
@@ -15,7 +15,7 @@ func UpdateCreds(db *gorm.DB, req *models.UserChangeCreds) error {
 	if err != nil {
 		return err
 	}
-	
+
 	user.Password = new_password
 
 	if err := db.Model(user).Select("username", "password").Where("username = ?", req.Username).Updates(user).Error; err != nil {

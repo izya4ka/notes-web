@@ -13,7 +13,7 @@ import (
 )
 
 func PutChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
-	
+
 	req := new(models.UserChangeCreds)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")

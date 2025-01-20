@@ -15,7 +15,7 @@ func (err ErrAlreadyExists) Error() string {
 }
 
 type ErrJSON struct {
-	Msg string `json:"msg"`
+	Msg   string `json:"msg"`
 	Error string `json:"error"`
 }
 
