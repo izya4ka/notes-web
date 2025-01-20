@@ -1,0 +1,76 @@
+services:
+  notes-service:
+    build: 
+      context: ./notes-service
+      dockerfile: Dockerfile
+    ports:
+      - 5001:8080
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
+    depends_on:
+      - database
+      - user-service
+    command: go run /app/main.go
+    develop:
+      watch: 
+        - path: ./notes-service
+          action: sync+restart
+          target: /app
+          ignore:
+            - notes-service
+    networks:
+      - backend_network
+    
+  user-service:
+    build: 
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - 5000:8080
+    environment:
+      - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - database
+    command: go run /app/main.go
+    develop:
+      watch: 
+        - path: ./user-service
+          action: sync+restart
+          target: /app
+          ignore:
+            - user-service
+    networks:
+      - backend_network
+      - redis_network
+
+  database:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+  redis:
+    image: redis:latest
+    networks:
+      - redis_network
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+
+networks:
+  backend_network:
+    driver: bridge
+  redis_network:
+    driver: bridge
+
+volumes:
+  db_data:
