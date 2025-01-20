@@ -13,6 +13,7 @@ import (
 )
 
 func PostRegister(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
+	
 	req := new(models.LogPassReq)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
@@ -23,7 +24,7 @@ func PostRegister(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 	}
 
 	if err := database.CheckUserExists(db, req.Username); err == nil {
-		return c.String(http.StatusBadRequest, myerrors.ErrAlreadyExists(req.Username).Error())
+		return c.String(http.StatusConflict, myerrors.ErrAlreadyExists(req.Username).Error())
 	}
 
 	token, err := database.AddUser(db, rdb, req)

@@ -10,6 +10,7 @@ import (
 )
 
 func CheckPassword(req *models.LogPassReq, db *gorm.DB) error {
+	
 	user := new(models.UserPostgres)
 
 	err := db.Model(user).Where("username = ?", req.Username).Select("username", "password").First(user).Error

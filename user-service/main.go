@@ -37,7 +37,7 @@ func main() {
 		return handlers.PostLogin(c, db, rdb)
 	})
 	e.PUT("/change", func(c echo.Context) error {
-		return handlers.PutUpdate(c, db, rdb)
+		return handlers.PutChangeCreds(c, db, rdb)
 	})
 	e.Logger.Fatal(e.Start(":8080"))
 }

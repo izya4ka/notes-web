@@ -7,6 +7,7 @@ import (
 )
 
 func CheckUserExists(db *gorm.DB, username string) error {
+	
 	user := new(models.UserPostgres)
 	if err := db.Model(user).Select("username").Where("username = ?", username).First(user).Error; err != nil {
 		return myerrors.ErrUserNotFound(username)

@@ -29,7 +29,7 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassReq) (string, er
 
 	result := db.Create(&user)
 
-	token, terr := SetToken(db, rdb, req.Username)
+	token, terr := UpdateToken(db, rdb, req.Username)
 	if terr != nil {
 		return "", terr
 	}

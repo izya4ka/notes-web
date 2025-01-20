@@ -12,6 +12,7 @@ import (
 )
 
 func PostLogin(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
+	
 	req := new(models.LogPassReq)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
@@ -25,12 +26,10 @@ func PostLogin(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
 
-	token, terr := database.SetToken(db, rdb, req.Username)
+	token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
 		return c.String(http.StatusInternalServerError, terr.Error())
 	}
 
-	return c.JSON(http.StatusOK, models.TokenReq{
-		Token: token,
-	})
+	return c.String(http.StatusOK, token)
 }
