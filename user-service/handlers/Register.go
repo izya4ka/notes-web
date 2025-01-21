@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PostRegister handles the user registration process.
+// Register handles the user registration process.
 // It binds the incoming request to a LogPassRequest model and performs validations
 // on the provided username and password. If the username is already taken, it returns
 // a conflict status. If registration is successful, it generates a token for the new user
@@ -27,7 +27,7 @@ import (
 //
 //	An error if there is a failure in processing the registration, otherwise returns
 //	a HTTP response indicating the status of the registration.
-func PostRegister(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
+func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {

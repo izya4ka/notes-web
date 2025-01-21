@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PutChangeCreds handles the request to change user credentials.
+// ChangeCreds handles the request to change user credentials.
 // It processes the incoming request to update the user's username and password.
 // The function performs validation checks to ensure the request is valid,
 // including checking if the username already exists and validating the user's token.
@@ -27,7 +27,7 @@ import (
 //
 // Returns:
 // - An error if the process encounters any issues, otherwise returns nil.
-func PutChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
+func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.UserChangeCredsRequest)
 	if err := c.Bind(req); err != nil {

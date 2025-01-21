@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PostLogin handles user login requests. It processes the login credentials
+// Login handles user login requests. It processes the login credentials
 // provided by the user, validates them, and returns an authentication token on success.
 //
 // The function expects a JSON request body containing the login information,
@@ -32,7 +32,7 @@ import (
 //
 // Returns:
 // - error: An error, if any occurred during the login process. Otherwise, it returns nil.
-func PostLogin(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
+func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {

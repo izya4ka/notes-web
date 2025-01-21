@@ -39,17 +39,17 @@ func main() {
 
 	// Register the POST handler for user registration.
 	e.POST("/register", func(c echo.Context) error {
-		return handlers.PostRegister(c, db, rdb)
+		return handlers.Register(c, db, rdb)
 	})
 
 	// Register the POST handler for user login.
 	e.POST("/login", func(c echo.Context) error {
-		return handlers.PostLogin(c, db, rdb)
+		return handlers.Login(c, db, rdb)
 	})
 
 	// Register the PUT handler for changing user credentials.
 	e.PUT("/change", func(c echo.Context) error {
-		return handlers.PutChangeCreds(c, db, rdb)
+		return handlers.ChangeCreds(c, db, rdb)
 	})
 
 	// Start the Echo server on port 8080, logging fatal errors if they occur.
