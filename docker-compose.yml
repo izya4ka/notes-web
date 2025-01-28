@@ -6,6 +6,7 @@ services:
     ports:
       - ${NOTES_SERVICE_PORT}:${NOTES_SERVICE_PORT}
     environment:
+      - NOTES_SERVICE_PORT=${NOTES_SERVICE_PORT}
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
     depends_on:
       - database
@@ -32,6 +33,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - JWT_SECRET=${JWT_SECRET}
+      - USER_SERVICE_PORT=${USER_SERVICE_PORT}
     depends_on:
       - database
     command: go run /app/main.go
