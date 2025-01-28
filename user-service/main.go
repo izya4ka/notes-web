@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"os"
+
+	"log"
 
 	"github.com/izya4ka/notes-web/user-service/handlers"
 	"github.com/izya4ka/notes-web/user-service/models"
@@ -22,10 +24,9 @@ func main() {
 	// Establish a connection to the PostgreSQL database using the provided DB_URL environment variable.
 	db, err := gorm.Open(postgres.Open(os.Getenv("DB_URL")), &gorm.Config{})
 	if err != nil {
-		println("Error: ", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-	fmt.Println("DB success!")
+	log.Print("DB connection success!")
 
 	// Automatically migrate the UserPostgres and Note models to the database.
 	db.AutoMigrate(&models.UserPostgres{}, &models.Note{})
@@ -36,6 +37,12 @@ func main() {
 		Password: "", // Password should be set if Redis requires authentication.
 		DB:       0,  // Use default DB.
 	})
+
+	// Check if Redis connection established
+	ctx := context.Background()
+	if _, err := rdb.Ping(ctx).Result(); err != nil {
+		log.Fatal(err)
+	}
 
 	// Register the POST handler for user registration.
 	e.POST("/register", func(c echo.Context) error {
@@ -53,5 +60,5 @@ func main() {
 	})
 
 	// Start the Echo server on port 8080, logging fatal errors if they occur.
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":" + os.Getenv("USER_SERVICE_PORT")))
 }

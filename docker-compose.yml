@@ -4,7 +4,7 @@ services:
       context: ./notes-service
       dockerfile: Dockerfile
     ports:
-      - 5001:8080
+      - ${NOTES_SERVICE_PORT}:${NOTES_SERVICE_PORT}
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
     depends_on:
@@ -26,7 +26,7 @@ services:
       context: ./user-service
       dockerfile: Dockerfile
     ports:
-      - 5000:8080
+      - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
       - REDIS_HOST=redis

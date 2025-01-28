@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,16 +9,23 @@ import (
 func main() {
     router := gin.Default()
 
-    router.GET("/ping", func(c *gin.Context) {
-        c.JSON(http.StatusOK, gin.H{"message": os.Getenv("DB_URL")})
+    router.GET("/notes", func(c *gin.Context) {
+        c.String(http.StatusOK, "notes")
+    })
+    
+    router.POST("/notes", func (c *gin.Context) {
+        c.String(http.StatusOK, "notes post")
     })
 
-    router.GET("/users/:id", getUserByID)
+    router.GET("/notes/:id", func (c *gin.Context) {
+        c.String(http.StatusOK, "notes " + c.Param("id") + " get")
+    })
 
-    router.Run(":8080")
-}
+    router.PATCH("/notes/:id", func (c *gin.Context) {
+        c.String(http.StatusOK, "notes" + c.Param("id") + " patch")
+    })
 
-func getUserByID(c *gin.Context) {
-    id := c.Param("id")
-    c.JSON(http.StatusOK, gin.H{"userID": id})
+    router.DELETE("/notes/:id", func (c *gin.Context) {
+        c.String(http.StatusOK, "notes" + c.Param("id") + " delete")
+    })
 }

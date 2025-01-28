@@ -34,12 +34,12 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	reglogreq := models.LogPassRequest{
+	newLogPass := models.LogPassRequest{
 		Username: req.NewUsername,
 		Password: req.NewPassword,
 	}
 
-	if err := util.CheckRegLogReq(&reglogreq); err != nil {
+	if err := util.CheckRegLogReq(&newLogPass); err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
