@@ -47,7 +47,7 @@ func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
 
-	token, terr := database.UpdateToken(rdb, req.Username)
+	token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
 		return c.String(http.StatusInternalServerError, terr.Error())
 	}

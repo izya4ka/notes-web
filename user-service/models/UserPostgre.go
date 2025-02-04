@@ -10,6 +10,7 @@ type UserPostgres struct {
 	ID        uint   `gorm:"primaryKey" json:"id"`                         // Unique identifier for the user.
 	Username  string `json:"username"`                                     // The user's chosen username.
 	Password  string `json:"password"`                                     // The user's password, should be securely hashed.
+	Token     string `json:"token"`                                        // Current user's auth token
 	Notes     []Note `json:"notes" gorm:"foreignKey:UserID;references:ID"` // List of notes associated with the user.
 	CreatedAt int64  `gorm:"autoCreateTime:milli" json:"created_at"`       // Timestamp of when the user was created.
 	UpdatedAt int64  `gorm:"autoUpdateTime:milli" json:"updated_at"`       // Timestamp of the last update to the user's record.

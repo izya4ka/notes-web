@@ -3,7 +3,9 @@ package database
 import (
 	"context"
 
+	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 // DeleteToken removes the specified user's token from the Redis database.
@@ -11,8 +13,19 @@ import (
 // If the operation fails, it returns an error. The function executes
 // the deletion in the context of a background context, ensuring that
 // it can run independently of any parent context.
-func DeleteToken(rdb *redis.Client, username string) error {
+func DeleteToken(db *gorm.DB, rdb *redis.Client, username string) error {
+
+	user := new(models.UserPostgres)
+
+	err := db.Model(user).Select("username", "token").Where("username = ?", username).First(user).Error
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
-	_, err := rdb.Del(ctx, username).Result()
+	if _, err := rdb.Del(ctx, user.Token).Result(); err != nil {
+		return err
+	}
+	err = db.Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error
 	return err
 }

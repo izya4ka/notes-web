@@ -29,17 +29,12 @@ import (
 // - An error if the process encounters any issues, otherwise returns nil.
 func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
-	req := new(models.UserChangeCredsRequest)
+	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	newLogPass := models.LogPassRequest{
-		Username: req.NewUsername,
-		Password: req.NewPassword,
-	}
-
-	if err := util.CheckRegLogReq(&newLogPass); err != nil {
+	if err := util.CheckRegLogReq(req); err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
@@ -48,32 +43,20 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return c.String(http.StatusUnauthorized, err.Error())
 	}
 
-	if err := database.CheckUserExists(db, req.Username); err != nil {
-		return c.String(http.StatusConflict, err.Error())
-	}
-	flag := false
-	if req.NewUsername != req.Username {
-		flag = true
-		if err := database.CheckUserExists(db, req.NewUsername); err == nil {
-			return c.String(http.StatusConflict, usererrors.ErrAlreadyExists(req.NewUsername).Error())
-		}
+	username, uerr := database.GetUsernameByToken(rdb, token)
+	if uerr != nil {
+		return c.String(http.StatusUnauthorized, uerr.Error())
 	}
 
-	if err := database.ValidateToken(rdb, req.Username, token); err != nil {
-		return c.String(http.StatusUnauthorized, err.Error())
+	if err := database.CheckUserExists(db, req.Username); err == nil && username != req.Username {
+		return c.String(http.StatusConflict, usererrors.ErrAlreadyExists(req.Username).Error())
 	}
 
-	if flag {
-		if err := database.DeleteToken(rdb, req.Username); err != nil {
-			return c.String(http.StatusInternalServerError, err.Error())
-		}
-	}
-
-	if err := database.UpdateCreds(db, req); err != nil {
+	if err := database.UpdateCreds(db, username, req); err != nil {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	new_token, terr := database.UpdateToken(rdb, req.NewUsername)
+	new_token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
 		return c.String(http.StatusInternalServerError, terr.Error())
 	}

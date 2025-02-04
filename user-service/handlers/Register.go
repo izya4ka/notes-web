@@ -42,8 +42,11 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return c.String(http.StatusConflict, usererrors.ErrAlreadyExists(req.Username).Error())
 	}
 
-	token, err := database.AddUser(db, rdb, req)
+	if err := database.AddUser(db, rdb, req); err != nil {
+		return err
+	}
 
+	token, err := database.UpdateToken(db, rdb, req.Username)
 	if err != nil {
 		return c.String(http.StatusBadRequest, err.Error())
 	}

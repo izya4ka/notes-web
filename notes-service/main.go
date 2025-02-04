@@ -8,27 +8,27 @@ import (
 )
 
 func main() {
-    router := gin.Default()
+	router := gin.Default()
 
-    router.GET("/notes", func(c *gin.Context) {
-        c.String(http.StatusOK, "notes")
-    })
-    
-    router.POST("/notes", func (c *gin.Context) {
-        c.String(http.StatusOK, "notes post")
-    })
+	router.GET("/notes", func(c *gin.Context) {
+		c.String(http.StatusOK, "notes")
+	})
 
-    router.GET("/notes/:id", func (c *gin.Context) {
-        c.String(http.StatusOK, "notes " + c.Param("id") + " get")
-    })
+	router.POST("/notes", func(c *gin.Context) {
+		c.String(http.StatusOK, "notes post")
+	})
 
-    router.PATCH("/notes/:id", func (c *gin.Context) {
-        c.String(http.StatusOK, "notes" + c.Param("id") + " patch")
-    })
+	router.GET("/notes/:id", func(c *gin.Context) {
+		c.String(http.StatusOK, "notes "+c.Param("id")+" get")
+	})
 
-    router.DELETE("/notes/:id", func (c *gin.Context) {
-        c.String(http.StatusOK, "notes" + c.Param("id") + " delete")
-    })
+	router.PATCH("/notes/:id", func(c *gin.Context) {
+		c.String(http.StatusOK, "notes"+c.Param("id")+" patch")
+	})
 
-    router.Run("0.0.0.0:" + os.Getenv("NOTES_SERVICE_PORT"))
+	router.DELETE("/notes/:id", func(c *gin.Context) {
+		c.String(http.StatusOK, "notes"+c.Param("id")+" delete")
+	})
+
+	router.Run("0.0.0.0:" + os.Getenv("NOTES_SERVICE_PORT"))
 }

@@ -18,7 +18,7 @@ func CheckRegLogReq(req *models.LogPassRequest) error {
 		return usererrors.ErrStringLen{
 			StringName:    "username",
 			MustSize:      5,
-			LessOrGreater: "bigger",
+			LessOrGreater: "greater",
 		}
 	}
 
@@ -42,7 +42,7 @@ func CheckRegLogReq(req *models.LogPassRequest) error {
 		return usererrors.ErrStringLen{
 			StringName:    "password",
 			MustSize:      6,
-			LessOrGreater: "bigger",
+			LessOrGreater: "greater",
 		}
 	}
 

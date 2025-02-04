@@ -23,18 +23,18 @@ import (
 // Returns:
 // - A string containing the generated token if successful, or an empty string if an error occurs.
 // - An error indicating what went wrong during the user creation process.
-func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) (string, error) {
+func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 
 	// Check if the username contains any special characters
 	if strings.ContainsAny(req.Username, "\"/!@#$%^&*()+=[]{}';:?*") {
-		return "", usererrors.ErrNotWithoutSpecSym(req.Username)
+		return usererrors.ErrNotWithoutSpecSym(req.Username)
 	}
 
 	// Hash the user's password
 	password, perr := util.Hash(req.Password)
 
 	if perr != nil {
-		return "", perr
+		return perr
 	}
 
 	// Create a new user model instance with the provided username and hashed password
@@ -46,17 +46,11 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) (string
 	// Insert the new user into the database
 	result := db.Create(&user)
 
-	// Generate a token for the user
-	token, terr := UpdateToken(rdb, req.Username)
-	if terr != nil {
-		return "", terr
-	}
-
 	// Check if there was an error during the database operation
 	if result.Error != nil {
-		return "", result.Error
+		return result.Error
 	}
 
 	// Return the generated token
-	return token, nil
+	return nil
 }

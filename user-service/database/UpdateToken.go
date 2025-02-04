@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 // UpdateToken generates a new token for the given username and updates it in
@@ -23,7 +25,7 @@ import (
 //
 // Returns:
 // - A string containing the new token if the operation succeeds, or an error if it fails.
-func UpdateToken(rdb *redis.Client, username string) (string, error) {
+func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error) {
 
 	token, jerr := util.CalcToken(username)
 	if jerr != nil {
@@ -31,11 +33,13 @@ func UpdateToken(rdb *redis.Client, username string) (string, error) {
 	}
 
 	ctx := context.Background()
-	if err := DeleteToken(rdb, username); err != nil {
+	if err := DeleteToken(db, rdb, username); err != nil {
 		return "", err
 	}
-	if _, err := rdb.Set(ctx, username, token, time.Hour*24*7).Result(); err != nil {
+	if _, err := rdb.Set(ctx, token, username, time.Hour*24*7).Result(); err != nil {
 		return "", err
 	}
+
+	db.Model(&models.UserPostgres{}).Select("username", "token").Where("username = ?", username).Update("token", token)
 	return token, nil
 }
