@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -29,24 +30,32 @@ import (
 // - A string containing the new token if the operation succeeds, or an error if it fails.
 func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error) {
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
 	token, jerr := util.CalcToken(username)
 	if jerr != nil {
 		log.Println("Error: ", jerr)
 		return "", usererrors.ErrInternal
 	}
 
-	ctx := context.Background()
 	if err := DeleteToken(db, rdb, username); err != nil {
 		return "", err
 	}
 	if _, err := rdb.Set(ctx, token, username, time.Hour*24*7).Result(); err != nil {
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", usererrors.ErrTimedOut
+		}
 		return "", usererrors.ErrInternal
 	}
 
 	err := db.Model(&models.UserPostgres{}).Select("username", "token").Where("username = ?", username).Update("token", token).Error
 	if err != nil {
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", usererrors.ErrTimedOut
+		}
 		return "", usererrors.ErrInternal
 	}
 	return token, nil

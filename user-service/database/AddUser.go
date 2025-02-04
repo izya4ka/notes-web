@@ -1,8 +1,11 @@
 package database
 
 import (
+	"context"
+	"errors"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -25,7 +28,6 @@ import (
 // - A string containing the generated token if successful, or an empty string if an error occurs.
 // - An error indicating what went wrong during the user creation process.
 func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
-
 	// Check if the username contains any special characters
 	if strings.ContainsAny(req.Username, "\"/!@#$%^&*()+=[]{}';:?*") {
 		return usererrors.ErrNotWithoutSpecSym(req.Username)
@@ -45,12 +47,18 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 		Password: password,
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
 	// Insert the new user into the database
-	result := db.Create(&user)
+	result := db.WithContext(ctx).Create(&user)
 
 	// Check if there was an error during the database operation
 	if result.Error != nil {
 		log.Println("Error: ", result.Error)
+		if errors.Is(result.Error, context.DeadlineExceeded) {
+			return usererrors.ErrTimedOut
+		}
 		return usererrors.ErrInternal
 	}
 

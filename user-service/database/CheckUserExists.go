@@ -1,8 +1,10 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -23,12 +25,18 @@ import (
 // it returns a user-specific error indicating that the user was not found. Other errors returned
 func CheckUserExists(db *gorm.DB, username string) error {
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
 	user := new(models.UserPostgres)
-	if err := db.Model(user).Select("username").Where("username = ?", username).First(user).Error; err != nil {
+	if err := db.WithContext(ctx).Model(user).Select("username").Where("username = ?", username).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(username)
 		}
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return usererrors.ErrTimedOut
+		}
 		return usererrors.ErrInternal
 	}
 	return nil

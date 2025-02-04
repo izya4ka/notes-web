@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -20,22 +21,32 @@ func DeleteToken(db *gorm.DB, rdb *redis.Client, username string) error {
 
 	user := new(models.UserPostgres)
 
-	err := db.Model(user).Select("username", "token").Where("username = ?", username).First(user).Error
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	err := db.WithContext(ctx).Model(user).Select("username", "token").Where("username = ?", username).First(user).Error
 	if err != nil {
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return usererrors.ErrTimedOut
+		}
 		return usererrors.ErrInternal
 	}
-
-	ctx := context.Background()
 	if _, err := rdb.Del(ctx, user.Token).Result(); err != nil {
 		if !errors.Is(err, redis.Nil) {
 			log.Println("Error: ", err)
+			if errors.Is(err, context.DeadlineExceeded) {
+				return usererrors.ErrTimedOut
+			}
 			return usererrors.ErrInternal
 		}
 	}
-	err = db.Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error
+	err = db.WithContext(ctx).Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error
 	if err != nil {
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return usererrors.ErrTimedOut
+		}
 		return usererrors.ErrInternal
 	}
 	return nil

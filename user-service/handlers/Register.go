@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/izya4ka/notes-web/user-service/database"
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
@@ -39,14 +41,24 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	if err := database.CheckUserExists(db, req.Username); err == nil {
 		return util.SendErrorResponse(c, http.StatusConflict, "CONFLICT", "User "+req.Username+" already exists!")
+	} else {
+		if errors.Is(err, usererrors.ErrTimedOut) {
+			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
+		}
 	}
 
 	if err := database.AddUser(db, rdb, req); err != nil {
+		if errors.Is(err, usererrors.ErrTimedOut) {
+			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
+		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 
 	token, err := database.UpdateToken(db, rdb, req.Username)
 	if err != nil {
+		if errors.Is(err, usererrors.ErrTimedOut) {
+			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
+		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 

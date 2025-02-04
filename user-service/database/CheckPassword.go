@@ -1,8 +1,10 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -30,12 +32,18 @@ import (
 func CheckPassword(req *models.LogPassRequest, db *gorm.DB) error {
 	user := new(models.UserPostgres)
 
-	err := db.Model(user).Where("username = ?", req.Username).Select("username", "password").First(user).Error
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	err := db.WithContext(ctx).Model(user).Where("username = ?", req.Username).Select("username", "password").First(user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(req.Username)
 		} else {
 			log.Println("Error: ", err)
+			if errors.Is(err, context.DeadlineExceeded) {
+				return usererrors.ErrTimedOut
+			}
 			return usererrors.ErrInternal
 		}
 	}

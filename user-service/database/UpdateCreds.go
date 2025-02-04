@@ -1,7 +1,10 @@
 package database
 
 import (
+	"context"
+	"errors"
 	"log"
+	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -29,9 +32,15 @@ func UpdateCreds(db *gorm.DB, username string, req *models.LogPassRequest) error
 
 	user.Password = new_password
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
 	// Update the user's credentials in the database
-	if err := db.Model(user).Select("username", "password").Where("username = ?", username).Updates(user).Error; err != nil {
+	if err := db.WithContext(ctx).Model(user).Select("username", "password").Where("username = ?", username).Updates(user).Error; err != nil {
 		log.Println("Error: ", err)
+		if errors.Is(err, context.DeadlineExceeded) {
+			return usererrors.ErrTimedOut
+		}
 		return usererrors.ErrInternal
 	}
 

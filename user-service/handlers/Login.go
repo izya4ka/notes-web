@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/izya4ka/notes-web/user-service/database"
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
@@ -44,11 +46,17 @@ func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 	}
 
 	if err := database.CheckPassword(req, db); err != nil {
+		if errors.Is(err, usererrors.ErrTimedOut) {
+			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
+		}
 		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
 	}
 
 	token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
+		if errors.Is(terr, usererrors.ErrTimedOut) {
+			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", terr.Error())
+		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", terr.Error())
 	}
 
