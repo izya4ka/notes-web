@@ -52,11 +52,11 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 	}
 
 	if err := database.UpdateCreds(db, username, req); err != nil {
-		return util.SendErrorResponse(c, http.StatusInternalServerError, "", "")
+		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 	new_token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
-		return util.SendErrorResponse(c, http.StatusInternalServerError, "", "")
+		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", terr.Error())
 	}
 	return c.String(http.StatusOK, new_token)
 }

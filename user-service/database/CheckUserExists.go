@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"log"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -27,7 +28,8 @@ func CheckUserExists(db *gorm.DB, username string) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(username)
 		}
-		return err
+		log.Println("Error: ", err)
+		return usererrors.ErrInternal
 	}
 	return nil
 }

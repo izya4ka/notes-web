@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log"
 	"strings"
 
 	"github.com/izya4ka/notes-web/user-service/models"
@@ -34,7 +35,8 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 	password, perr := util.Hash(req.Password)
 
 	if perr != nil {
-		return perr
+		log.Println("Error: ", perr)
+		return usererrors.ErrInternal
 	}
 
 	// Create a new user model instance with the provided username and hashed password
@@ -48,7 +50,8 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 
 	// Check if there was an error during the database operation
 	if result.Error != nil {
-		return result.Error
+		log.Println("Error: ", result.Error)
+		return usererrors.ErrInternal
 	}
 
 	// Return the generated token

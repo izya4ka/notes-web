@@ -3,8 +3,10 @@ package database
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -20,16 +22,21 @@ func DeleteToken(db *gorm.DB, rdb *redis.Client, username string) error {
 
 	err := db.Model(user).Select("username", "token").Where("username = ?", username).First(user).Error
 	if err != nil {
-		return err
+		log.Println("Error: ", err)
+		return usererrors.ErrInternal
 	}
 
 	ctx := context.Background()
 	if _, err := rdb.Del(ctx, user.Token).Result(); err != nil {
 		if !errors.Is(err, redis.Nil) {
-			return nil
+			log.Println("Error: ", err)
+			return usererrors.ErrInternal
 		}
-		return err
 	}
 	err = db.Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error
-	return err
+	if err != nil {
+		log.Println("Error: ", err)
+		return usererrors.ErrInternal
+	}
+	return nil
 }

@@ -15,6 +15,6 @@ func UnrawToken(auth_header string) (string, error) {
 	if strings.HasPrefix(auth_header, "Bearer ") {
 		return strings.TrimPrefix(auth_header, "Bearer "), nil
 	} else {
-		return "", usererrors.ErrInvalidToken(0) // Return an error for invalid token format
+		return "", usererrors.ErrInvalidToken // Return an error for invalid token format
 	}
 }

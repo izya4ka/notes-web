@@ -1,7 +1,10 @@
 package database
 
 import (
+	"log"
+
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"gorm.io/gorm"
 )
@@ -20,14 +23,16 @@ func UpdateCreds(db *gorm.DB, username string, req *models.LogPassRequest) error
 	new_password, err := util.Hash(req.Password)
 
 	if err != nil {
-		return err
+		log.Println("Error: ", err)
+		return usererrors.ErrInternal
 	}
 
 	user.Password = new_password
 
 	// Update the user's credentials in the database
 	if err := db.Model(user).Select("username", "password").Where("username = ?", username).Updates(user).Error; err != nil {
-		return err
+		log.Println("Error: ", err)
+		return usererrors.ErrInternal
 	}
 
 	return nil

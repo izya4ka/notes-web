@@ -38,16 +38,16 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 	}
 
 	if err := database.CheckUserExists(db, req.Username); err == nil {
-		return util.SendErrorResponse(c, http.StatusConflict, "CONFLICT", "User already exists!")
+		return util.SendErrorResponse(c, http.StatusConflict, "CONFLICT", "User "+req.Username+" already exists!")
 	}
 
 	if err := database.AddUser(db, rdb, req); err != nil {
-		return util.SendErrorResponse(c, http.StatusInternalServerError, "", "")
+		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 
 	token, err := database.UpdateToken(db, rdb, req.Username)
 	if err != nil {
-		return util.SendErrorResponse(c, http.StatusInternalServerError, "", "")
+		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 
 	return c.String(http.StatusCreated, token)

@@ -2,9 +2,11 @@ package database
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -29,7 +31,8 @@ func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error
 
 	token, jerr := util.CalcToken(username)
 	if jerr != nil {
-		return "", jerr
+		log.Println("Error: ", jerr)
+		return "", usererrors.ErrInternal
 	}
 
 	ctx := context.Background()
@@ -37,9 +40,14 @@ func UpdateToken(db *gorm.DB, rdb *redis.Client, username string) (string, error
 		return "", err
 	}
 	if _, err := rdb.Set(ctx, token, username, time.Hour*24*7).Result(); err != nil {
-		return "", err
+		log.Println("Error: ", err)
+		return "", usererrors.ErrInternal
 	}
 
-	db.Model(&models.UserPostgres{}).Select("username", "token").Where("username = ?", username).Update("token", token)
+	err := db.Model(&models.UserPostgres{}).Select("username", "token").Where("username = ?", username).Update("token", token).Error
+	if err != nil {
+		log.Println("Error: ", err)
+		return "", usererrors.ErrInternal
+	}
 	return token, nil
 }

@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"log"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
@@ -34,7 +35,8 @@ func CheckPassword(req *models.LogPassRequest, db *gorm.DB) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(req.Username)
 		} else {
-			return err
+			log.Println("Error: ", err)
+			return usererrors.ErrInternal
 		}
 	}
 
@@ -44,7 +46,8 @@ func CheckPassword(req *models.LogPassRequest, db *gorm.DB) error {
 		if errors.Is(herr, bcrypt.ErrMismatchedHashAndPassword) {
 			return usererrors.ErrMismatchPass(req.Username)
 		} else {
-			return herr
+			log.Println("Error: ", herr)
+			return usererrors.ErrInternal
 		}
 	}
 	return nil
