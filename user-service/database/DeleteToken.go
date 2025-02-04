@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/redis/go-redis/v9"
@@ -24,6 +25,9 @@ func DeleteToken(db *gorm.DB, rdb *redis.Client, username string) error {
 
 	ctx := context.Background()
 	if _, err := rdb.Del(ctx, user.Token).Result(); err != nil {
+		if !errors.Is(err, redis.Nil) {
+			return nil
+		}
 		return err
 	}
 	err = db.Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error

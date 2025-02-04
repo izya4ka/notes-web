@@ -14,5 +14,5 @@ func GetUsernameByToken(rdb *redis.Client, token string) (string, error) {
 	if errors.Is(err, redis.Nil) {
 		return "", usererrors.ErrInvalidToken(0)
 	}
-	return username, nil
+	return username, err
 }
