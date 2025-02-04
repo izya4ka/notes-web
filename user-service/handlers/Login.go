@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/izya4ka/notes-web/user-service/database"
 	"github.com/izya4ka/notes-web/user-service/models"
@@ -35,48 +34,22 @@ import (
 // - error: An error, if any occurred during the login process. Otherwise, it returns nil.
 func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
-	current_time := time.Now().Format("2006-01-02 15:04:05")
-
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Error{
-			Code:      http.StatusBadRequest,
-			Error:     "BAD_REQUEST",
-			Message:   "bad data in request",
-			Timestamp: current_time,
-			Path:      c.Path(),
-		})
+		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", "Bad data in request!")
 	}
 
 	if err := util.CheckRegLogReq(req); err != nil {
-		return c.JSON(http.StatusBadRequest, models.Error{
-			Code:      http.StatusBadRequest,
-			Error:     "BAD_REQUEST",
-			Message:   err.Error(),
-			Timestamp: current_time,
-			Path:      c.Path(),
-		})
+		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", err.Error())
 	}
 
 	if err := database.CheckPassword(req, db); err != nil {
-		return c.JSON(http.StatusUnauthorized, models.Error{
-			Code:      http.StatusUnauthorized,
-			Error:     "UNAUTHORIZED",
-			Message:   err.Error(),
-			Timestamp: current_time,
-			Path:      c.Path(),
-		})
+		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
 	}
 
 	token, terr := database.UpdateToken(db, rdb, req.Username)
 	if terr != nil {
-		return c.JSON(http.StatusInternalServerError, models.Error{
-			Code:      http.StatusInternalServerError,
-			Error:     "INTERNAL_ERROR",
-			Message:   "Error has occured on the server side",
-			Timestamp: current_time,
-			Path:      c.Path(),
-		})
+		return util.SendErrorResponse(c, http.StatusInternalServerError, "", "")
 	}
 
 	return c.String(http.StatusOK, token)
