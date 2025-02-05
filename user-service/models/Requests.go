@@ -13,3 +13,7 @@ type Error struct {
 	Path      string `json:"path"`
 	Timestamp string `json:"timestamp"`
 }
+
+type Token struct {
+	Token string `json:"token"`
+}

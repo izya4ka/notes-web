@@ -73,5 +73,7 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", terr.Error())
 	}
-	return c.String(http.StatusOK, new_token)
+	return c.JSON(http.StatusOK, models.Token{
+		Token: new_token,
+	})
 }

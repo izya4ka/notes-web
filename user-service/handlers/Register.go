@@ -62,5 +62,7 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 
-	return c.String(http.StatusCreated, token)
+	return c.JSON(http.StatusCreated, models.Token{
+		Token: token,
+	})
 }
