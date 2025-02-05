@@ -10,6 +10,7 @@ import (
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
+	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -27,7 +28,7 @@ import (
 // Returns:
 // - A string containing the generated token if successful, or an empty string if an error occurs.
 // - An error indicating what went wrong during the user creation process.
-func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
+func AddUser(c echo.Context, db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 	// Check if the username contains any special characters
 	if strings.ContainsAny(req.Username, "\"/!@#$%^&*()+=[]{}';:?*") {
 		return usererrors.ErrNotWithoutSpecSym(req.Username)
@@ -47,7 +48,7 @@ func AddUser(db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 		Password: password,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
 
 	// Insert the new user into the database

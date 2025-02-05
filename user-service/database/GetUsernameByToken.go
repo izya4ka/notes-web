@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/izya4ka/notes-web/user-service/usererrors"
+	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
 )
 
-func GetUsernameByToken(rdb *redis.Client, token string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+func GetUsernameByToken(c echo.Context, rdb *redis.Client, token string) (string, error) {
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
 	defer cancel()
 
 	username, err := rdb.Get(ctx, token).Result()
