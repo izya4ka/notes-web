@@ -9,7 +9,6 @@ import (
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
-	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +17,7 @@ import (
 // If the provided password cannot be hashed, an error is returned.
 // The function attempts to update the user's credentials while ensuring that only
 // the specified fields are modified and returns any errors encountered during the process.
-func UpdateCreds(c echo.Context, db *gorm.DB, username string, req *models.LogPassRequest) error {
+func UpdateCreds(base_ctx context.Context, db *gorm.DB, username string, req *models.LogPassRequest) error {
 
 	user := new(models.UserPostgres)
 	user.Username = req.Username
@@ -33,7 +32,7 @@ func UpdateCreds(c echo.Context, db *gorm.DB, username string, req *models.LogPa
 
 	user.Password = new_password
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
 	// Update the user's credentials in the database

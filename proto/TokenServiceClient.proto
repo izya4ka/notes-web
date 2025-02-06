@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package tokenservice;
+option go_package = "notes-service/proto";
+
+service TokenService {
+  rpc GetUsername (TokenRequest) returns (UsernameResponse);
+}
+
+message TokenRequest {
+  string input = 1;
+}
+
+message UsernameResponse {
+  string output = 1;
+}

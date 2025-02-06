@@ -9,7 +9,6 @@ import (
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
-	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -29,9 +28,9 @@ import (
 //
 // Returns:
 // - A string containing the new token if the operation succeeds, or an error if it fails.
-func UpdateToken(c echo.Context, db *gorm.DB, rdb *redis.Client, username string) (string, error) {
+func UpdateToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, username string) (string, error) {
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
 	token, jerr := util.CalcToken(username)
@@ -40,7 +39,7 @@ func UpdateToken(c echo.Context, db *gorm.DB, rdb *redis.Client, username string
 		return "", usererrors.ErrInternal
 	}
 
-	if err := DeleteToken(c, db, rdb, username); err != nil {
+	if err := DeleteToken(ctx, db, rdb, username); err != nil {
 		return "", err
 	}
 	if _, err := rdb.Set(ctx, token, username, time.Hour*24*7).Result(); err != nil {

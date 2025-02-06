@@ -8,7 +8,6 @@ import (
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
-	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -30,10 +29,10 @@ import (
 //   - An error if the user is not found, the password does not match, or
 //     if any other error occurs. Returns nil if the password is verified
 //     successfully.
-func CheckPassword(c echo.Context, req *models.LogPassRequest, db *gorm.DB) error {
+func CheckPassword(base_ctx context.Context, req *models.LogPassRequest, db *gorm.DB) error {
 	user := new(models.UserPostgres)
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
 	err := db.WithContext(ctx).Model(user).Where("username = ?", req.Username).Select("username", "password").First(user).Error

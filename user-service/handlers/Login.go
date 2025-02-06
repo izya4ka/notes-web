@@ -45,14 +45,14 @@ func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", err.Error())
 	}
 
-	if err := database.CheckPassword(c, req, db); err != nil {
+	if err := database.CheckPassword(c.Request().Context(), req, db); err != nil {
 		if errors.Is(err, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
 		}
 		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
 	}
 
-	token, terr := database.UpdateToken(c, db, rdb, req.Username)
+	token, terr := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if terr != nil {
 		if errors.Is(terr, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", terr.Error())

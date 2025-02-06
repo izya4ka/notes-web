@@ -2,14 +2,19 @@ package main
 
 import (
 	"context"
+	"net"
 	"os"
 
 	"log"
 
+	pb "github.com/izya4ka/notes-web/user-service/proto"
+
 	"github.com/izya4ka/notes-web/user-service/handlers"
 	"github.com/izya4ka/notes-web/user-service/models"
+	"github.com/izya4ka/notes-web/user-service/userrpc"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -43,6 +48,21 @@ func main() {
 	if _, err := rdb.Ping(ctx).Result(); err != nil {
 		log.Fatal(err)
 	}
+
+	lis, err := net.Listen("tcp", ":5002")
+	if err != nil {
+		log.Fatalf("Failed to listen for RPC: %v", err)
+	}
+
+	s := grpc.NewServer()
+	pb.RegisterTokenServiceServer(s, userrpc.NewRPCServer(rdb))
+
+	log.Printf("RPC server listening at %v", lis.Addr())
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("RPC server failed to serve: %v", err)
+		}
+	}()
 
 	// Register the POST handler for user registration.
 	e.POST("/register", func(c echo.Context) error {

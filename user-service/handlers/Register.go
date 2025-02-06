@@ -39,7 +39,7 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", err.Error())
 	}
 
-	if err := database.CheckUserExists(c, db, req.Username); err == nil {
+	if err := database.CheckUserExists(c.Request().Context(), db, req.Username); err == nil {
 		return util.SendErrorResponse(c, http.StatusConflict, "CONFLICT", "User "+req.Username+" already exists!")
 	} else {
 		if errors.Is(err, usererrors.ErrTimedOut) {
@@ -47,14 +47,14 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		}
 	}
 
-	if err := database.AddUser(c, db, rdb, req); err != nil {
+	if err := database.AddUser(c.Request().Context(), db, rdb, req); err != nil {
 		if errors.Is(err, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
 		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
 
-	token, err := database.UpdateToken(c, db, rdb, req.Username)
+	token, err := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if err != nil {
 		if errors.Is(err, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())

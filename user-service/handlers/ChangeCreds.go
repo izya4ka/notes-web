@@ -44,7 +44,7 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
 	}
 
-	username, uerr := database.GetUsernameByToken(c, rdb, token)
+	username, uerr := database.GetUsernameByToken(c.Request().Context(), rdb, token)
 	if uerr != nil {
 		if errors.Is(uerr, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", uerr.Error())
@@ -52,7 +52,7 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", uerr.Error())
 	}
 
-	if err := database.CheckUserExists(c, db, req.Username); err == nil && username != req.Username {
+	if err := database.CheckUserExists(c.Request().Context(), db, req.Username); err == nil && username != req.Username {
 		return util.SendErrorResponse(c, http.StatusConflict, "CONFLICT", "User already exists!")
 	} else if err != nil {
 		if errors.Is(uerr, usererrors.ErrTimedOut) {
@@ -60,13 +60,13 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 		}
 	}
 
-	if err := database.UpdateCreds(c, db, username, req); err != nil {
+	if err := database.UpdateCreds(c.Request().Context(), db, username, req); err != nil {
 		if errors.Is(uerr, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
 		}
 		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", err.Error())
 	}
-	new_token, terr := database.UpdateToken(c, db, rdb, req.Username)
+	new_token, terr := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if terr != nil {
 		if errors.Is(uerr, usererrors.ErrTimedOut) {
 			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", terr.Error())

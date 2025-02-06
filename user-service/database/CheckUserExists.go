@@ -8,7 +8,6 @@ import (
 
 	"github.com/izya4ka/notes-web/user-service/models"
 	"github.com/izya4ka/notes-web/user-service/usererrors"
-	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
@@ -24,9 +23,9 @@ import (
 // Returns:
 // An error indicating whether the user was found or not. If the user does not exist,
 // it returns a user-specific error indicating that the user was not found. Other errors returned
-func CheckUserExists(c echo.Context, db *gorm.DB, username string) error {
+func CheckUserExists(base_ctx context.Context, db *gorm.DB, username string) error {
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
 	user := new(models.UserPostgres)
