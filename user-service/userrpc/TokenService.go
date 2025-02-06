@@ -28,7 +28,7 @@ func (s *GRPC_server) GetUsername(ctx context.Context, req *pb.TokenRequest) (*p
 		return nil, status.Errorf(codes.InvalidArgument, "invalid token")
 	}
 
-	username, err := database.GetUsernameByToken(ctx, s.rdb, token)
+	username, err := database.GetUsername(ctx, s.rdb, token)
 	if err != nil {
 		if errors.Is(err, usererrors.ErrTimedOut) {
 			return nil, status.Errorf(codes.DeadlineExceeded, "timed out")
@@ -42,4 +42,8 @@ func (s *GRPC_server) GetUsername(ctx context.Context, req *pb.TokenRequest) (*p
 	return &pb.UsernameResponse{
 		Output: username,
 	}, nil
+}
+
+func NewRPCServer(rdb *redis.Client) *GRPC_server {
+	return &GRPC_server{rdb: rdb}
 }

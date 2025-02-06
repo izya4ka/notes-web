@@ -28,8 +28,8 @@ func CheckUserExists(base_ctx context.Context, db *gorm.DB, username string) err
 	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
-	user := new(models.UserPostgres)
-	if err := db.WithContext(ctx).Model(user).Select("username").Where("username = ?", username).First(user).Error; err != nil {
+	user := models.UserPostgres{}
+	if err := db.WithContext(ctx).Model(&models.UserPostgres{}).Select("id").Where("username = ?", username).Take(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(username)
 		}

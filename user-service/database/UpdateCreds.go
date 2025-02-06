@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -36,12 +35,16 @@ func UpdateCreds(base_ctx context.Context, db *gorm.DB, username string, req *mo
 	defer cancel()
 
 	// Update the user's credentials in the database
-	if err := db.WithContext(ctx).Model(user).Select("username", "password").Where("username = ?", username).Updates(user).Error; err != nil {
+	if err := db.WithContext(ctx).Model(user).Where("username = ?", username).Updates(&user).Error; err != nil {
 		log.Println("Error: ", err)
-		if errors.Is(err, context.DeadlineExceeded) {
+		switch err {
+		case context.DeadlineExceeded:
 			return usererrors.ErrTimedOut
+		case gorm.ErrRecordNotFound:
+			return usererrors.ErrUserNotFound(username)
+		default:
+			return usererrors.ErrInternal
 		}
-		return usererrors.ErrInternal
 	}
 
 	return nil

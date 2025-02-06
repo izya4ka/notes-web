@@ -15,7 +15,7 @@ import (
 func main() {
 	router := gin.Default()
 
-	conn, err := grpc.NewClient("user-service:5002", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("user-service:"+os.Getenv("GRPC_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("gRPC client failed to connect: %v", err)
 	}

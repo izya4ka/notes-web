@@ -30,12 +30,12 @@ import (
 //     if any other error occurs. Returns nil if the password is verified
 //     successfully.
 func CheckPassword(base_ctx context.Context, req *models.LogPassRequest, db *gorm.DB) error {
-	user := new(models.UserPostgres)
-
 	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
-	err := db.WithContext(ctx).Model(user).Where("username = ?", req.Username).Select("username", "password").First(user).Error
+	user := models.UserPostgres{}
+
+	err := db.WithContext(ctx).Model(user).Select("password").Where("username = ?", req.Username).Take(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return usererrors.ErrUserNotFound(req.Username)

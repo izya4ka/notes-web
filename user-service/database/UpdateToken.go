@@ -42,6 +42,7 @@ func UpdateToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, usern
 	if err := DeleteToken(ctx, db, rdb, username); err != nil {
 		return "", err
 	}
+
 	if _, err := rdb.Set(ctx, token, username, time.Hour*24*7).Result(); err != nil {
 		log.Println("Error: ", err)
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -50,13 +51,17 @@ func UpdateToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, usern
 		return "", usererrors.ErrInternal
 	}
 
-	err := db.Model(&models.UserPostgres{}).Select("username", "token").Where("username = ?", username).Update("token", token).Error
+	err := db.Model(&models.UserPostgres{}).Where("username = ?", username).Update("token", token).Error
 	if err != nil {
 		log.Println("Error: ", err)
-		if errors.Is(err, context.DeadlineExceeded) {
+		switch err {
+		case context.DeadlineExceeded:
 			return "", usererrors.ErrTimedOut
+		case gorm.ErrRecordNotFound:
+			return "", usererrors.ErrUserNotFound(username)
+		default:
+			return "", usererrors.ErrInternal
 		}
-		return "", usererrors.ErrInternal
 	}
 	return token, nil
 }

@@ -8,6 +8,7 @@ services:
     environment:
       - NOTES_SERVICE_PORT=${NOTES_SERVICE_PORT}
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
+      - GRPC_PORT=${GRPC_PORT}
     depends_on:
       - database
       - user-service
@@ -34,6 +35,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - JWT_SECRET=${JWT_SECRET}
       - USER_SERVICE_PORT=${USER_SERVICE_PORT}
+      - GRPC_PORT=${GRPC_PORT}
     depends_on:
       - database
     command: go run /app/main.go

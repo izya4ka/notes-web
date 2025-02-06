@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func GetUsernameByToken(base_ctx context.Context, rdb *redis.Client, token string) (string, error) {
+func GetUsername(base_ctx context.Context, rdb *redis.Client, token string) (string, error) {
 	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 

@@ -24,13 +24,17 @@ func DeleteToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, usern
 	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
 
-	err := db.WithContext(ctx).Model(user).Select("username", "token").Where("username = ?", username).First(user).Error
+	err := db.WithContext(ctx).Model(user).Select("token").Where("username = ?", username).First(user).Error
 	if err != nil {
 		log.Println("Error: ", err)
-		if errors.Is(err, context.DeadlineExceeded) {
+		switch err {
+		case context.DeadlineExceeded:
 			return usererrors.ErrTimedOut
+		case gorm.ErrRecordNotFound:
+			return usererrors.ErrUserNotFound(username)
+		default:
+			return usererrors.ErrInternal
 		}
-		return usererrors.ErrInternal
 	}
 
 	if _, err := rdb.Del(ctx, user.Token).Result(); err != nil {
@@ -41,15 +45,6 @@ func DeleteToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, usern
 			}
 			return usererrors.ErrInternal
 		}
-	}
-
-	err = db.WithContext(ctx).Model(user).Select("username", "token").Where("username = ?", username).Update("token", "").Error
-	if err != nil {
-		log.Println("Error: ", err)
-		if errors.Is(err, context.DeadlineExceeded) {
-			return usererrors.ErrTimedOut
-		}
-		return usererrors.ErrInternal
 	}
 	return nil
 }
