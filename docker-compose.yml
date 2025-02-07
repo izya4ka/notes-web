@@ -9,6 +9,7 @@ services:
       - NOTES_SERVICE_PORT=${NOTES_SERVICE_PORT}
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
       - GRPC_PORT=${GRPC_PORT}
+      - GIN_MODE=${GIN_MODE}
     depends_on:
       - database
       - user-service

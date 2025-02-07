@@ -38,7 +38,7 @@ func CheckPassword(base_ctx context.Context, req *models.LogPassRequest, db *gor
 	err := db.WithContext(ctx).Model(user).Select("password").Where("username = ?", req.Username).Take(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return usererrors.ErrUserNotFound(req.Username)
+			return usererrors.ErrUserNotFound
 		} else {
 			log.Println("Error: ", err)
 			if errors.Is(err, context.DeadlineExceeded) {
@@ -52,7 +52,7 @@ func CheckPassword(base_ctx context.Context, req *models.LogPassRequest, db *gor
 
 	if herr != nil {
 		if errors.Is(herr, bcrypt.ErrMismatchedHashAndPassword) {
-			return usererrors.ErrMismatchPass(req.Username)
+			return usererrors.ErrMismatchPass
 		} else {
 			log.Println("Error: ", herr)
 			return usererrors.ErrInternal

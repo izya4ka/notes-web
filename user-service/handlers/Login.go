@@ -1,12 +1,10 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/izya4ka/notes-web/user-service/database"
 	"github.com/izya4ka/notes-web/user-service/models"
-	"github.com/izya4ka/notes-web/user-service/usererrors"
 	"github.com/izya4ka/notes-web/user-service/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
@@ -38,26 +36,20 @@ func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
-		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", "Bad data in request!")
+		return util.SendErrorResponse(c, err)
 	}
 
 	if err := util.CheckRegLogReq(req); err != nil {
-		return util.SendErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", err.Error())
+		return util.SendErrorResponse(c, err)
 	}
 
 	if err := database.CheckPassword(c.Request().Context(), req, db); err != nil {
-		if errors.Is(err, usererrors.ErrTimedOut) {
-			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", err.Error())
-		}
-		return util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", err.Error())
+		return util.SendErrorResponse(c, err)
 	}
 
 	token, terr := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if terr != nil {
-		if errors.Is(terr, usererrors.ErrTimedOut) {
-			return util.SendErrorResponse(c, http.StatusRequestTimeout, "REQUEST_TIMEOUT", terr.Error())
-		}
-		return util.SendErrorResponse(c, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", terr.Error())
+		return util.SendErrorResponse(c, terr)
 	}
 
 	return c.JSON(http.StatusOK, models.Token{

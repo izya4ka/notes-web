@@ -30,7 +30,7 @@ import (
 func AddUser(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, req *models.LogPassRequest) error {
 	// Check if the username contains any special characters
 	if strings.ContainsAny(req.Username, "\"/!@#$%^&*()+=[]{}';:?*") {
-		return usererrors.ErrNotWithoutSpecSym(req.Username)
+		return usererrors.ErrNotWithoutSpecSym
 	}
 
 	// Hash the user's password

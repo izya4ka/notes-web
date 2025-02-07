@@ -31,7 +31,7 @@ func CheckUserExists(base_ctx context.Context, db *gorm.DB, username string) err
 	user := models.UserPostgres{}
 	if err := db.WithContext(ctx).Model(&models.UserPostgres{}).Select("id").Where("username = ?", username).Take(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return usererrors.ErrUserNotFound(username)
+			return usererrors.ErrUserNotFound
 		}
 		log.Println("Error: ", err)
 		if errors.Is(err, context.DeadlineExceeded) {

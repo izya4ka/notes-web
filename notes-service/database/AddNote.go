@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest, username string) error {
+func AddNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest, username string) (models.Note, error) {
 
 	ctx, cancel := context.WithTimeout(base_ctx, 5*time.Second)
 	defer cancel()
@@ -24,10 +24,10 @@ func AddNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest,
 	if err := db.WithContext(ctx).Create(&note).Error; err != nil {
 		log.Println("Error: ", err)
 		if errors.Is(err, context.DeadlineExceeded) {
-			return noteserrors.ErrTimedOut
+			return note, noteserrors.ErrTimedOut
 		}
-		return noteserrors.ErrInternal
+		return note, noteserrors.ErrInternal
 	}
 
-	return nil
+	return note, nil
 }

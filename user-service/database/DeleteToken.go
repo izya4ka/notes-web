@@ -31,7 +31,7 @@ func DeleteToken(base_ctx context.Context, db *gorm.DB, rdb *redis.Client, usern
 		case context.DeadlineExceeded:
 			return usererrors.ErrTimedOut
 		case gorm.ErrRecordNotFound:
-			return usererrors.ErrUserNotFound(username)
+			return usererrors.ErrUserNotFound
 		default:
 			return usererrors.ErrInternal
 		}

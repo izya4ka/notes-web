@@ -41,7 +41,7 @@ func UpdateCreds(base_ctx context.Context, db *gorm.DB, username string, req *mo
 		case context.DeadlineExceeded:
 			return usererrors.ErrTimedOut
 		case gorm.ErrRecordNotFound:
-			return usererrors.ErrUserNotFound(username)
+			return usererrors.ErrUserNotFound
 		default:
 			return usererrors.ErrInternal
 		}

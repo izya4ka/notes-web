@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func PutNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest, username string, id int) error {
+func PutNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest, username string, id int) (models.Note, error) {
 	var note models.Note
 
 	note.ID = uint(id)
@@ -25,14 +25,14 @@ func PutNote(base_ctx context.Context, db *gorm.DB, req *models.BaseNoteRequest,
 	if err := result.Error; err != nil {
 		log.Println("Error: ", err)
 		if errors.Is(err, context.DeadlineExceeded) {
-			return noteserrors.ErrTimedOut
+			return note, noteserrors.ErrTimedOut
 		}
-		return noteserrors.ErrInternal
+		return note, noteserrors.ErrInternal
 	}
 
 	if result.RowsAffected == 0 {
-		return noteserrors.ErrNotFound
+		return note, noteserrors.ErrNotFound
 	}
 
-	return nil
+	return note, nil
 }

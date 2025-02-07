@@ -26,8 +26,8 @@ func Auth(c *gin.Context, rpc *pb.TokenServiceClient) (string, error) {
 				return "", noteserrors.ErrTimedOut
 			case codes.NotFound:
 				return "", noteserrors.ErrInvalidToken
-			case codes.Internal:
-				log.Println("Error: ", err)
+			default:
+				log.Println("Error: ", st.Err())
 				return "", noteserrors.ErrInternal
 			}
 		}
