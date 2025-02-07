@@ -12,7 +12,7 @@ package models
 // UpdatedAt records the timestamp of when the note was last updated.
 type Note struct {
 	ID          uint   `gorm:"primaryKey" json:"id"`                   // Unique identifier for the note
-	UserID      uint   `json:"user_id"`                                // Identifier of the user who created the note
+	Username    string `json:"username"`                               // Identifier of the user who created the note
 	Title       string `json:"title"`                                  // Title of the note
 	Description string `json:"description"`                            // Detailed description of the note
 	CreatedAt   int64  `gorm:"autoCreateTime:milli" json:"created_at"` // Timestamp of note creation

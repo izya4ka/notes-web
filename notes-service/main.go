@@ -6,14 +6,29 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/izya4ka/notes-web/notes-service/handlers"
 	"github.com/izya4ka/notes-web/notes-service/middleware"
+	"github.com/izya4ka/notes-web/notes-service/models"
 	pb "github.com/izya4ka/notes-web/notes-service/proto"
+	"github.com/izya4ka/notes-web/notes-service/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
 	router := gin.Default()
+
+	// Establish a connection to the PostgreSQL database using the provided DB_URL environment variable.
+	db, err := gorm.Open(postgres.Open(os.Getenv("DB_URL")), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print("DB connection success!")
+
+	// Automatically migrate the UserPostgres and Note models to the database.
+	db.AutoMigrate(&models.UserPostgres{}, &models.Note{})
 
 	conn, err := grpc.NewClient("user-service:"+os.Getenv("GRPC_PORT"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -26,46 +41,46 @@ func main() {
 	router.GET("/notes", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
-			c.String(http.StatusUnauthorized, "unauthorized")
+			util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token!")
 			return
 		}
-		c.String(http.StatusOK, "notes and username: "+username)
+		handlers.GetNotes(c, db, username)
 	})
 
 	router.POST("/notes", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
-			c.String(http.StatusUnauthorized, "unauthorized")
+			util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token!")
 			return
 		}
-		c.String(http.StatusOK, "notes post"+" and username: "+username)
+		handlers.PostNotes(c, db, username)
 	})
 
 	router.GET("/notes/:id", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
-			c.String(http.StatusUnauthorized, "unauthorized")
+			util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token!")
 			return
 		}
-		c.String(http.StatusOK, "notes "+c.Param("id")+" get"+" and username: "+username)
+		handlers.GetNote(c, db, username)
 	})
 
-	router.PATCH("/notes/:id", func(c *gin.Context) {
+	router.PUT("/notes/:id", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
-			c.String(http.StatusUnauthorized, "unauthorized")
+			util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token!")
 			return
 		}
-		c.String(http.StatusOK, "notes"+c.Param("id")+" patch"+" and username: "+username)
+		handlers.PutNode(c, db, username)
 	})
 
 	router.DELETE("/notes/:id", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
-			c.String(http.StatusUnauthorized, "unauthorized")
+			util.SendErrorResponse(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token!")
 			return
 		}
-		c.String(http.StatusOK, "notes"+c.Param("id")+" delete"+" and username: "+username)
+		handlers.DeleteNote(c, db, username)
 	})
 
 	router.Run("0.0.0.0:" + os.Getenv("NOTES_SERVICE_PORT"))
