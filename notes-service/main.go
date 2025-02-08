@@ -9,7 +9,9 @@ import (
 func main() {
 	var server server.Server
 
-	server.InitDB(os.Getenv("DB_URL"))
-	server.InitGRPC(os.Getenv("GRPC_PORT"))
-	server.InitGIN(os.Getenv("NOTES_SERVICE_PORT"))
+	go server.InitDB(os.Getenv("DB_URL"))
+	go server.InitGRPC(os.Getenv("GRPC_PORT"))
+	go server.InitGIN(os.Getenv("NOTES_SERVICE_PORT"))
+
+	server.Shutdown()
 }

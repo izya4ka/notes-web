@@ -1,7 +1,14 @@
 package server
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/izya4ka/notes-web/notes-service/handlers"
@@ -17,10 +24,14 @@ import (
 
 type Server struct {
 	db          *gorm.DB
-	grpc_server *grpc.ClientConn
+	grpc_client *grpc.ClientConn
+	srv         *http.Server
+	mutex       sync.Mutex
 }
 
 func (s *Server) InitDB(db_url string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	// Establish a connection to the PostgreSQL database using the provided DB_URL environment variable.
 	db, err := gorm.Open(postgres.Open(db_url), &gorm.Config{})
 	if err != nil {
@@ -34,9 +45,10 @@ func (s *Server) InitDB(db_url string) {
 }
 
 func (s *Server) InitGIN(port string) {
+	s.mutex.Lock()
 	router := gin.Default()
 
-	token_service_client := pb.NewTokenServiceClient(s.grpc_server)
+	token_service_client := pb.NewTokenServiceClient(s.grpc_client)
 
 	router.GET("/notes", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
@@ -83,14 +95,55 @@ func (s *Server) InitGIN(port string) {
 		handlers.DeleteNote(c, s.db, username)
 	})
 
-	router.Run("0.0.0.0:" + port)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router.Handler(),
+	}
+	s.srv = srv
+	s.mutex.Unlock()
+	srv.ListenAndServe()
 }
 
 func (s *Server) InitGRPC(port string) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	conn, err := grpc.NewClient("user-service:"+port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("gRPC client failed to connect: %v", err)
 	}
-	s.grpc_server = conn
+	s.grpc_client = conn
 	log.Println("GRPC Client started!")
+}
+
+func (s *Server) Shutdown() {
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Starting graceful shutdown...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := s.srv.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Gin stopping error: %v", err)
+	}
+	log.Println("Gin stopped!")
+
+	sqldb, serr := s.db.DB()
+	if serr == nil {
+		if err := sqldb.Close(); err != nil {
+			log.Fatalf("Database stopping error: %v", err)
+		}
+	} else {
+		log.Fatalf("Database stopping error: %v", serr)
+	}
+	log.Println("Database connection stopped!")
+
+	if err := s.grpc_client.Close(); err != nil {
+		log.Fatalf("GRPC client stopping error: %v", err)
+	}
+	log.Println("GRPC client stopped!")
+	os.Exit(0)
 }

@@ -11,16 +11,16 @@ services:
       - GRPC_PORT=${GRPC_PORT}
       - GIN_MODE=${GIN_MODE}
     depends_on:
-      - database
       - user-service
-    command: go run /app/main.go
     develop:
       watch: 
-        - path: ./notes-service
-          action: sync+restart
+        - action: sync
+          path: ./notes-service
           target: /app
           ignore:
             - notes-service
+        - action: rebuild
+          path: ./notes-service
     networks:
       - backend_network
     
@@ -39,14 +39,17 @@ services:
       - GRPC_PORT=${GRPC_PORT}
     depends_on:
       - database
-    command: go run /app/main.go
+      - redis
+    stop_grace_period: 30s
     develop:
       watch: 
-        - path: ./user-service
-          action: sync+restart
+        - action: sync
+          path: ./user-service
           target: /app
           ignore:
             - user-service
+        - action: rebuild
+          path: ./user-service
     networks:
       - backend_network
       - redis_network

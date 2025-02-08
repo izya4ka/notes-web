@@ -9,11 +9,12 @@ import (
 // main initializes the Echo server, connects to the PostgreSQL database,
 // and sets up the Redis client. If there is an errors in initialization, it will exit
 func main() {
-	var s server.Server
+	var server server.Server
 
-	s.InitDatabase(os.Getenv("DB_URL"))
-	s.InitRedis(os.Getenv("REDIS_PORT"))
-	go s.InitGRPC(os.Getenv("GRPC_PORT"))
-	s.InitEcho(os.Getenv("USER_SERVICE_PORT"))
+	go server.InitDatabase(os.Getenv("DB_URL"))
+	go server.InitRedis(os.Getenv("REDIS_PORT"))
+	go server.InitGRPC(os.Getenv("GRPC_PORT"))
+	go server.InitEcho(os.Getenv("USER_SERVICE_PORT"))
 
+	server.Shutdown()
 }
