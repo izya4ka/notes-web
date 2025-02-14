@@ -50,7 +50,7 @@ func (s *Server) InitGIN(port string) {
 
 	token_service_client := pb.NewTokenServiceClient(s.grpc_client)
 
-	router.GET("/notes", func(c *gin.Context) {
+	router.GET("/notes/get", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
 			util.SendErrorResponse(c, err)
@@ -59,7 +59,7 @@ func (s *Server) InitGIN(port string) {
 		handlers.GetNotes(c, s.db, username)
 	})
 
-	router.POST("/notes", func(c *gin.Context) {
+	router.POST("/notes/add", func(c *gin.Context) {
 		username, err := middleware.Auth(c, &token_service_client)
 		if err != nil {
 			util.SendErrorResponse(c, err)

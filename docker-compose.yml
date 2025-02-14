@@ -1,10 +1,33 @@
 services:
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - ${GATEWAY_PORT}:${GATEWAY_PORT}
+    environment:
+      - NOTES_SERVICE_URL=http://notes-service:${NOTES_SERVICE_PORT}
+      - USER_SERVICE_URL=http://user-service:${USER_SERVICE_PORT}
+      - GATEWAY_PORT=${GATEWAY_PORT}
+    depends_on:
+      - user-service
+      - notes-service
+    develop:
+      watch: 
+        - action: sync
+          path: ./gateway
+          target: /app
+        - action: rebuild
+          path: ./gateway
+    networks:
+      - gateway_network
+    
   notes-service:
     build: 
       context: ./notes-service
       dockerfile: Dockerfile
-    ports:
-      - ${NOTES_SERVICE_PORT}:${NOTES_SERVICE_PORT}
+    # ports:
+    #   - ${NOTES_SERVICE_PORT}:${NOTES_SERVICE_PORT}
     environment:
       - NOTES_SERVICE_PORT=${NOTES_SERVICE_PORT}
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
@@ -17,19 +40,18 @@ services:
         - action: sync
           path: ./notes-service
           target: /app
-          ignore:
-            - notes-service
         - action: rebuild
           path: ./notes-service
     networks:
       - backend_network
+      - gateway_network
     
   user-service:
     build: 
       context: ./user-service
       dockerfile: Dockerfile
-    ports:
-      - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
+    # ports:
+    #   - ${USER_SERVICE_PORT}:${USER_SERVICE_PORT}
     environment:
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:5432/${DB_NAME}
       - REDIS_HOST=redis
@@ -46,18 +68,17 @@ services:
         - action: sync
           path: ./user-service
           target: /app
-          ignore:
-            - user-service
         - action: rebuild
           path: ./user-service
     networks:
       - backend_network
       - redis_network
+      - gateway_network
 
   database:
     image: postgres:latest
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -71,13 +92,15 @@ services:
     image: redis:latest
     networks:
       - redis_network
-    ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+    # ports:
+    #   - ${REDIS_PORT}:${REDIS_PORT}
 
 networks:
   backend_network:
     driver: bridge
   redis_network:
+    driver: bridge
+  gateway_network:
     driver: bridge
 
 volumes:

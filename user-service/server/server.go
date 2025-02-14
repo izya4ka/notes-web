@@ -35,17 +35,17 @@ func (s *Server) InitEcho(port string) {
 	e := echo.New()
 
 	// Register the POST handler for user registration.
-	e.POST("/register", func(c echo.Context) error {
+	e.POST("/user/register", func(c echo.Context) error {
 		return handlers.Register(c, s.db, s.rdb)
 	})
 
 	// Register the POST handler for user login.
-	e.POST("/login", func(c echo.Context) error {
+	e.POST("/user/login", func(c echo.Context) error {
 		return handlers.Login(c, s.db, s.rdb)
 	})
 
 	// Register the PUT handler for changing user credentials.
-	e.PUT("/change", func(c echo.Context) error {
+	e.PUT("/user/change", func(c echo.Context) error {
 		return handlers.ChangeCreds(c, s.db, s.rdb)
 	})
 
