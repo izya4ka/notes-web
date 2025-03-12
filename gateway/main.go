@@ -2,47 +2,49 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/izya4ka/notes-web/gateway/middleware"
+	pb "github.com/izya4ka/notes-web/gateway/proto"
+	"github.com/izya4ka/notes-web/gateway/util"
+	"github.com/labstack/echo/v4"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func NewReverseProxy(target string) (*httputil.ReverseProxy, error) {
-	targetURL, err := url.Parse(target)
-	if err != nil {
-		return nil, err
-	}
-	return httputil.NewSingleHostReverseProxy(targetURL), nil
-}
-
 func main() {
-	r := mux.NewRouter()
+	e := echo.New()
+	e.Use(middleware.Logger)
 
-	user_service_url := os.Getenv("USER_SERVICE_URL")
-	notes_service_url := os.Getenv("NOTES_SERVICE_URL")
-	gateway_port := os.Getenv("GATEWAY_PORT")
-
-	user_proxy, err := NewReverseProxy(user_service_url)
-	if err != nil {
-		log.Fatal(err)
+	if os.Getenv("DEBUG") != "" {
+		e.Debug = true
 	}
 
-	notes_proxy, err := NewReverseProxy(notes_service_url)
+	userServiceURL := os.Getenv("USER_SERVICE_URL")
+	notesServiceURL := os.Getenv("NOTES_SERVICE_URL")
+	grpcAddress := os.Getenv("GRPC_ADDRESS")
+	gatewayPort := os.Getenv("GATEWAY_PORT")
+
+	conn, err := grpc.NewClient(grpcAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal(err)
+		util.LogFatalf("gRPC didn't start: %s", err)
 	}
 
-	r.HandleFunc("/user/{rest:.*}", func(w http.ResponseWriter, r *http.Request) {
-		user_proxy.ServeHTTP(w, r)
+	rpc := pb.NewTokenServiceClient(conn)
+	util.LogInfof("gRPC client started!")
+
+	api := e.Group("/api")
+	v1 := api.Group("/v1")
+
+	v1.Any("/notes*", func(c echo.Context) error {
+		return Handler(c, notesServiceURL)
+	}, func(next echo.HandlerFunc) echo.HandlerFunc {
+		return middleware.Auth(next, &rpc)
 	})
 
-	r.HandleFunc("/notes/{rest:.*}", func(w http.ResponseWriter, r *http.Request) {
-		notes_proxy.ServeHTTP(w, r)
+	v1.Any("/user*", func(c echo.Context) error {
+		return Handler(c, userServiceURL)
 	})
 
-	log.Println("API Gateway started on :" + gateway_port)
-	log.Fatal(http.ListenAndServe(":"+gateway_port, r))
+	log.Fatal(e.Start(":" + gatewayPort))
 }

@@ -12,21 +12,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/izya4ka/notes-web/notes-service/handlers"
-	"github.com/izya4ka/notes-web/notes-service/middleware"
 	"github.com/izya4ka/notes-web/notes-service/models"
-	pb "github.com/izya4ka/notes-web/notes-service/proto"
-	"github.com/izya4ka/notes-web/notes-service/util"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Server struct {
-	db          *gorm.DB
-	grpc_client *grpc.ClientConn
-	srv         *http.Server
-	mutex       sync.Mutex
+	db    *gorm.DB
+	srv   *http.Server
+	mutex sync.Mutex
 }
 
 func (s *Server) InitDB(db_url string) {
@@ -46,53 +40,38 @@ func (s *Server) InitDB(db_url string) {
 
 func (s *Server) InitGIN(port string) {
 	s.mutex.Lock()
+
+	isDebug := os.Getenv("DEBUG") != ""
+
+	if isDebug {
+		gin.SetMode("debug")
+	} else {
+		gin.SetMode("release")
+	}
+
 	router := gin.Default()
 
-	token_service_client := pb.NewTokenServiceClient(s.grpc_client)
+	api := router.Group("/api")
+	v1 := api.Group("/v1")
 
-	router.GET("/notes/get", func(c *gin.Context) {
-		username, err := middleware.Auth(c, &token_service_client)
-		if err != nil {
-			util.SendErrorResponse(c, err)
-			return
-		}
-		handlers.GetNotes(c, s.db, username)
+	v1.GET("/notes", func(c *gin.Context) {
+		handlers.GetNotes(c, s.db)
 	})
 
-	router.POST("/notes/add", func(c *gin.Context) {
-		username, err := middleware.Auth(c, &token_service_client)
-		if err != nil {
-			util.SendErrorResponse(c, err)
-			return
-		}
-		handlers.PostNotes(c, s.db, username)
+	v1.POST("/notes", func(c *gin.Context) {
+		handlers.PostNotes(c, s.db)
 	})
 
-	router.GET("/notes/:id", func(c *gin.Context) {
-		username, err := middleware.Auth(c, &token_service_client)
-		if err != nil {
-			util.SendErrorResponse(c, err)
-			return
-		}
-		handlers.GetNote(c, s.db, username)
+	v1.GET("/notes/:id", func(c *gin.Context) {
+		handlers.GetNote(c, s.db)
 	})
 
-	router.PUT("/notes/:id", func(c *gin.Context) {
-		username, err := middleware.Auth(c, &token_service_client)
-		if err != nil {
-			util.SendErrorResponse(c, err)
-			return
-		}
-		handlers.PutNode(c, s.db, username)
+	v1.PUT("/notes/:id", func(c *gin.Context) {
+		handlers.PutNode(c, s.db)
 	})
 
-	router.DELETE("/notes/:id", func(c *gin.Context) {
-		username, err := middleware.Auth(c, &token_service_client)
-		if err != nil {
-			util.SendErrorResponse(c, err)
-			return
-		}
-		handlers.DeleteNote(c, s.db, username)
+	v1.DELETE("/notes/:id", func(c *gin.Context) {
+		handlers.DeleteNote(c, s.db)
 	})
 
 	srv := &http.Server{
@@ -102,17 +81,6 @@ func (s *Server) InitGIN(port string) {
 	s.srv = srv
 	s.mutex.Unlock()
 	srv.ListenAndServe()
-}
-
-func (s *Server) InitGRPC(port string) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	conn, err := grpc.NewClient("user-service:"+port, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("gRPC client failed to connect: %v", err)
-	}
-	s.grpc_client = conn
-	log.Println("GRPC Client started!")
 }
 
 func (s *Server) Shutdown() {
@@ -140,10 +108,5 @@ func (s *Server) Shutdown() {
 		log.Fatalf("Database stopping error: %v", serr)
 	}
 	log.Println("Database connection stopped!")
-
-	if err := s.grpc_client.Close(); err != nil {
-		log.Fatalf("GRPC client stopping error: %v", err)
-	}
-	log.Println("GRPC client stopped!")
 	os.Exit(0)
 }

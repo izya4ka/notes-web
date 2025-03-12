@@ -31,35 +31,43 @@ func ChangeCreds(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
+		util.LogDebugf("%s %s error binding: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := util.CheckRegLogReq(req); err != nil {
+		util.LogDebugf("%s %s checking creds: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	token, err := util.UnrawToken(c.Request().Header.Get("Authorization"))
 	if err != nil {
+		util.LogDebugf("%s %s error unraw token: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	username, uerr := database.GetUsername(c.Request().Context(), rdb, token)
 	if uerr != nil {
+		util.LogDebugf("%s %s error getting username: %s", c.Request().Method, c.Path(), uerr)
 		return util.SendErrorResponse(c, uerr)
 	}
 
 	if err := database.CheckUserExists(c.Request().Context(), db, req.Username); err == nil && username != req.Username {
+		util.LogDebugf("%s %s error check user exists: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, usererrors.ErrAlreadyExists)
 	} else if err != nil {
+		util.LogDebugf("%s %s user not exists: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := database.UpdateCreds(c.Request().Context(), db, username, req); err != nil {
+		util.LogDebugf("%s %s error updating credentials: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	new_token, terr := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if terr != nil {
+		util.LogDebugf("%s %s error updating token: %s", c.Request().Method, c.Path(), terr)
 		return util.SendErrorResponse(c, terr)
 	}
 

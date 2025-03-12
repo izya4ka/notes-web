@@ -31,23 +31,28 @@ func Register(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
+		util.LogDebugf("%s %s error binding: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := util.CheckRegLogReq(req); err != nil {
+		util.LogDebugf("%s %s error checking creds: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := database.CheckUserExists(c.Request().Context(), db, req.Username); err == nil {
+		util.LogDebugf("%s %s error check user exists: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, usererrors.ErrAlreadyExists)
 	}
 
 	if err := database.AddUser(c.Request().Context(), db, rdb, req); err != nil {
+		util.LogDebugf("%s %s error adding user to database: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	token, err := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if err != nil {
+		util.LogDebugf("%s %s error updating token: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 

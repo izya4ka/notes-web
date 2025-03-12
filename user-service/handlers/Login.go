@@ -36,19 +36,23 @@ func Login(c echo.Context, db *gorm.DB, rdb *redis.Client) error {
 
 	req := new(models.LogPassRequest)
 	if err := c.Bind(req); err != nil {
+		util.LogDebugf("%s %s error binding: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := util.CheckRegLogReq(req); err != nil {
+		util.LogDebugf("%s %s error checking creds: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	if err := database.CheckPassword(c.Request().Context(), req, db); err != nil {
+		util.LogDebugf("%s %s error checking password: %s", c.Request().Method, c.Path(), err)
 		return util.SendErrorResponse(c, err)
 	}
 
 	token, terr := database.UpdateToken(c.Request().Context(), db, rdb, req.Username)
 	if terr != nil {
+		util.LogDebugf("%s %s error updating token: %s", c.Request().Method, c.Path(), terr)
 		return util.SendErrorResponse(c, terr)
 	}
 

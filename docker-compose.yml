@@ -4,14 +4,18 @@ services:
       context: ./gateway
       dockerfile: Dockerfile
     ports:
-      - ${GATEWAY_PORT}:${GATEWAY_PORT}
+      - ${GATEWAY_PORT}:8080
     environment:
-      - NOTES_SERVICE_URL=http://notes-service:${NOTES_SERVICE_PORT}
-      - USER_SERVICE_URL=http://user-service:${USER_SERVICE_PORT}
-      - GATEWAY_PORT=${GATEWAY_PORT}
-    depends_on:
-      - user-service
-      - notes-service
+    - NOTES_SERVICE_URL=http://notes-service:${NOTES_SERVICE_PORT}
+    - USER_SERVICE_URL=http://user-service:${USER_SERVICE_PORT}
+    - FRONTEND_URL=http://frontend:${FRONTEND_PORT}
+    - GATEWAY_PORT=${GATEWAY_PORT}
+    - GRPC_ADDRESS=user-service:${GRPC_PORT}
+    - DEBUG=${DEBUG}
+    # depends_on:
+    #   - user-service
+    #   - notes-service
+    #   # - frontend
     develop:
       watch: 
         - action: sync
@@ -21,6 +25,19 @@ services:
           path: ./gateway
     networks:
       - gateway_network
+  
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - GATEWAY_URL=http://gateway:${GATEWAY_PORT}
+  #     - DEBUG=${DEBUG}
+  #   depends_on:
+  #     - user-service
+  #     - notes-service
+  #   networks:
+  #     - gateway_network
     
   notes-service:
     build: 
@@ -32,7 +49,7 @@ services:
       - NOTES_SERVICE_PORT=${NOTES_SERVICE_PORT}
       - DB_URL=postgres://${DB_USER}:${DB_PASSWORD}@database:${DB_PORT}/${DB_NAME}
       - GRPC_PORT=${GRPC_PORT}
-      - GIN_MODE=${GIN_MODE}
+      - DEBUG=${DEBUG}
     depends_on:
       - user-service
     develop:
@@ -59,6 +76,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - USER_SERVICE_PORT=${USER_SERVICE_PORT}
       - GRPC_PORT=${GRPC_PORT}
+      - DEBUG=${DEBUG}
     depends_on:
       - database
       - redis
@@ -77,8 +95,8 @@ services:
 
   database:
     image: postgres:latest
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package tokenservice;
-option go_package = "notes-service/proto";
+option go_package = "gateway/proto";
 
 service TokenService {
   rpc GetUsername (TokenRequest) returns (UsernameResponse);
