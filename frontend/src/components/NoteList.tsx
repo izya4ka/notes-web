@@ -1,3 +1,3 @@
 export const NoteList = () => {
-    return
-}
+  return;
+};

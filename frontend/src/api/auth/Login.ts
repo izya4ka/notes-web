@@ -1,14 +1,9 @@
-import { ServiceErrorResponse } from "../Types";
-import { LoginURL } from "../Variables"
-import { LoginRequest, TokenResponse } from "./Types"
+import { LoginURL } from "../Variables";
+import { LoginCredentials, TokenResponse } from "../../types/auth";
+import axios from "axios";
 
-export const Login = async (request: LoginRequest) => {
-
-    let result = await (await fetch(LoginURL)).json(); 
-    
-    if (typeof result?.code === "number") {
-        return result as ServiceErrorResponse
-    }
-
-    return (result as TokenResponse).token
-}
+export const LoginRequest = (request: LoginCredentials): Promise<TokenResponse> => {
+  return axios
+    .post<TokenResponse>(LoginURL, request)
+    .then(res => res.data)
+};

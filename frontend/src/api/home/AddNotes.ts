@@ -1,3 +1,3 @@
 export const AddNote = () => {
-    return
-}
+  return;
+};

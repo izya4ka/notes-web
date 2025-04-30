@@ -8,6 +8,7 @@ import (
 	pb "github.com/izya4ka/notes-web/gateway/proto"
 	"github.com/izya4ka/notes-web/gateway/util"
 	"github.com/labstack/echo/v4"
+	echo_middleware "github.com/labstack/echo/v4/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -15,6 +16,7 @@ import (
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger)
+	e.Use(echo_middleware.CORS())
 
 	if os.Getenv("DEBUG") != "" {
 		e.Debug = true

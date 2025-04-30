@@ -1,3 +1,3 @@
 export const DeleteNote = () => {
-    return
-}
+  return;
+};

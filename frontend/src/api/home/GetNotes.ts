@@ -1,3 +1,3 @@
 export const GetNotes = () => {
-    return
-}
+  return;
+};
