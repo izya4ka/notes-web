@@ -1,8 +1,7 @@
 export interface ServiceErrorResponse {
-    code: number;
-    error: string;
-    message: string;
-    path: string;
-    timestamp: string;
-  }
-  
+  code: number;
+  error: string;
+  message: string;
+  path: string;
+  timestamp: string;
+}

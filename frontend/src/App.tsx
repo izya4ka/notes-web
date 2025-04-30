@@ -21,8 +21,6 @@ export const App = () => {
     []
   );
 
-
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -32,11 +30,14 @@ export const App = () => {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<RegisterPage />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-                } />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </AuthProvider>
