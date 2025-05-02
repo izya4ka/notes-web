@@ -1,11 +1,13 @@
 package models
 
+import "time"
+
 type Error struct {
-	Code      int    `json:"code"`
-	Error     string `json:"error"`
-	Message   string `json:"message"`
-	Path      string `json:"path"`
-	Timestamp string `json:"timestamp"`
+	Code      int       `json:"code"`
+	Error     string    `json:"error"`
+	Message   string    `json:"message"`
+	Path      string    `json:"path"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type BaseNoteRequest struct {

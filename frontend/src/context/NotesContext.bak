@@ -1,0 +1,20 @@
+// import { createContext, ReactNode } from "react";
+// import { Note } from "../types/notes";
+
+// interface Props {
+//   children: ReactNode;
+// }
+
+// interface NotesContextType {
+//   notes: [Note],
+//   addNote: (note: Note) => void,
+//   deleteNote: (id: number) => void,
+//   putNote: (id: number, note: Note) => void,
+//   getNotes: (amount: number, page: number) => [Note],
+//   setNotes: ()
+// }
+
+
+// export const NotesContext = createContext<NotesContextType | undefined>(
+//   undefined
+// );

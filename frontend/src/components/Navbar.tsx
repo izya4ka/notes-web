@@ -46,6 +46,7 @@ export const Navbar: React.FC = () => {
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
+            color="primary"
           >
             Меню
           </Button>

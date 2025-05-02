@@ -3,5 +3,5 @@ export interface ServiceErrorResponse {
   error: string;
   message: string;
   path: string;
-  timestamp: string;
+  timestamp: Date;
 }

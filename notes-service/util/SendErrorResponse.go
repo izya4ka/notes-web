@@ -34,7 +34,7 @@ func SendErrorResponse(c *gin.Context, err error) {
 
 	error_response.Error = http.StatusText(error_response.Code)
 
-	error_response.Timestamp = time.Now().Format("2006-01-02 15:04:05")
+	error_response.Timestamp = time.Now()
 	error_response.Path = c.Request.URL.Path
 
 	c.JSON(error_response.Code, error_response)

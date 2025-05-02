@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // LogPassRequest represents a request to log in with a username and password.
 type LogPassRequest struct {
 	Username string `json:"username"` // The user's username.
@@ -7,11 +9,11 @@ type LogPassRequest struct {
 }
 
 type Error struct {
-	Code      int    `json:"code"`
-	Error     string `json:"error"`
-	Message   string `json:"message"`
-	Path      string `json:"path"`
-	Timestamp string `json:"timestamp"`
+	Code      int       `json:"code"`
+	Error     string    `json:"error"`
+	Message   string    `json:"message"`
+	Path      string    `json:"path"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type Token struct {

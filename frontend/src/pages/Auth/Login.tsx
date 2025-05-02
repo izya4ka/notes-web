@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { LoginRequest } from "../../api/auth/Login";
 import { ServiceErrorResponse } from "../../types/errors";
-import { LoginCredentials } from "../../types/auth";
+import { LoginCredentials, TokenResponse } from "../../types/auth";
 import { FormEvent } from "react";
 import { useSnackbar } from "notistack";
 
@@ -32,7 +32,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     try {
       const data = await LoginRequest(credentials);
-      auth.login(data.token);
+      auth.login((data as TokenResponse).token);
     } catch (err: any) {
       let message = "";
       if (err.response && err.response.data) {

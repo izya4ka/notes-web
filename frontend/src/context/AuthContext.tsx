@@ -1,5 +1,6 @@
 import { createContext, FC, ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { setAuthTokenGetter } from "../api/axios";
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,9 @@ export const AuthProvider: FC<Props> = ({ children }) => {
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
+
+    setAuthTokenGetter(() => token)
+
   }, [token]);
 
   const login = (newToken: string) => {

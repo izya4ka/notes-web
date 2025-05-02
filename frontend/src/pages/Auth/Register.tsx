@@ -1,7 +1,7 @@
 import { useSnackbar } from "notistack";
 import React, { FormEvent, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LoginCredentials } from "../../types/auth";
+import { LoginCredentials, TokenResponse } from "../../types/auth";
 import { AuthContext } from "../../context/AuthContext";
 import { ServiceErrorResponse } from "../../types/errors";
 import { Box, Button, TextField, Typography } from "@mui/material";
@@ -27,7 +27,8 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     try {
       const data = await RegisterRequest(credentials);
-      auth.login(data.token);
+      console.log(data)
+      auth.login((data as TokenResponse).token);
       navigate("/dashboard");
     } catch (err: any) {
       let message = "";
